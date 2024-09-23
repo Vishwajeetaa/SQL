@@ -1,0 +1,130 @@
+CREATE TABLE Restaurants (
+    Restaurant_ID VARCHAR(20) PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    City VARCHAR(20) NOT NULL CHECK (City IN ('Kitchener', 'Waterloo')),
+    Address VARCHAR(100) NOT NULL,
+    Phone_Number VARCHAR(20) NOT NULL,
+    Website VARCHAR(100)
+);
+
+CREATE TABLE Cuisines (
+    Cuisine_ID VARCHAR(20) PRIMARY KEY,
+    Cuisine_Type VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Restaurant_Cuisines (
+    Restaurant_ID VARCHAR(20) NOT NULL,
+    Cuisine_ID VARCHAR(20) NOT NULL,
+    PRIMARY KEY (Restaurant_ID, Cuisine_ID),
+    FOREIGN KEY (Restaurant_ID) REFERENCES Restaurants(Restaurant_ID),
+    FOREIGN KEY (Cuisine_ID) REFERENCES Cuisines(Cuisine_ID)
+);
+
+CREATE TABLE Reviews (
+    Review_ID VARCHAR(20) PRIMARY KEY,
+    Restaurant_ID VARCHAR(20) NOT NULL,
+    Rating SMALLINT NOT NULL CHECK (Rating BETWEEN 1 AND 5),
+    Review_Text TEXT,
+    Date_Posted TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Restaurant_ID) REFERENCES Restaurants(Restaurant_ID)
+);
+
+
+---------------
+
+
+Query 1: Total Movies and Distinct Genres
+
+SELECT (SELECT COUNT(*) FROM Movies) AS total_movies,
+       (SELECT COUNT(DISTINCT Genre_ID) FROM Movie_Genres) AS distinct_genres;
+
+Query 2: Average Running Time
+
+SELECT AVG(Running_Time) AS avg_running_time
+FROM Movies;
+
+Query 3: Movies Released Each Year
+
+SELECT Release_Year,
+       COUNT(*) AS num_movies,
+       SUM(Running_Time) AS total_running_time
+FROM Movies
+GROUP BY Release_Year
+ORDER BY Release_Year;
+
+Query 4: Top 5 Actors with Most Movies
+
+SELECT Actor_ID, COUNT(*) AS num_movies
+FROM Movie_Actors
+GROUP BY Actor_ID
+ORDER BY num_movies DESC
+LIMIT 5;
+
+SELECT a.Actor_Name, COUNT(*) AS num_movies
+FROM Movie_Actors ma
+JOIN Actors a ON ma.Actor_ID = a.Actor_ID
+GROUP BY a.Actor_Name
+ORDER BY num_movies DESC
+LIMIT 5;
+
+Query 5: Movies in Each Genre
+
+SELECT g.Genre_Name,
+       COUNT(mg.Movie_ID) AS num_movies,
+       SUM(m.Running_Time) AS total_running_time
+FROM Genres g
+JOIN Movie_Genres mg ON g.Genre_ID = mg.Genre_ID
+JOIN Movies m ON mg.Movie_ID = m.Movie_ID
+GROUP BY g.Genre_Name
+ORDER BY num_movies DESC;
+
+Query 6: Movies Released Each Year for Each Genre
+
+SELECT g.Genre_Name, m.Release_Year, COUNT(*) AS num_movies
+FROM Genres g
+JOIN Movie_Genres mg ON g.Genre_ID = mg.Genre_ID
+JOIN Movies m ON mg.Movie_ID = m.Movie_ID
+GROUP BY g.Genre_Name, m.Release_Year
+ORDER BY g.Genre_Name, m.Release_Year;
+
+Query 7: Movies Released Each Year for Each Director
+
+SELECT d.Director_Name, m.Release_Year, COUNT(*) AS num_movies
+FROM Directors d
+JOIN Movies m ON d.Director_ID = m.Director_ID
+GROUP BY d.Director_Name, m.Release_Year
+ORDER BY d.Director_Name, m.Release_Year;
+
+Query 8: Movies Released Each Year for Each Genre and Director
+
+SELECT d.Director_Name, g.Genre_Name, m.Release_Year, COUNT(*) AS num_movies
+FROM Directors d
+JOIN Movies m ON d.Director_ID = m.Director_ID
+JOIN Movie_Genres mg ON m.Movie_ID = mg.Movie_ID
+JOIN Genres g ON mg.Genre_ID = g.Genre_ID
+GROUP BY d.Director_Name, g.Genre_Name, m.Release_Year
+ORDER BY d.Director_Name, g.Genre_Name, m.Release_Year;
+
+Query 9: Movies Released Each Year for Each Genre and Director (CTE)
+
+WITH movie_genre_director AS (
+  SELECT d.Director_Name, g.Genre_Name, m.Release_Year, COUNT(*) AS num_movies
+  FROM Directors d
+  JOIN Movies m ON d.Director_ID = m.Director_ID
+  JOIN Movie_Genres mg ON m.Movie_ID = mg.Movie_ID
+  JOIN Genres g ON mg.Genre_ID = g.Genre_ID
+  GROUP BY d.Director_Name, g.Genre_Name, m.Release_Year
+)
+SELECT *
+FROM movie_genre_director
+ORDER BY Director_Name, Genre_Name, Release_Year;
+
+
+Query 10: Movies Released Each Year
+
+SELECT Release_Year, COUNT(*) AS num_movies
+FROM Movies
+GROUP BY Release_Year
+ORDER BY Release_Year;
+---------------------------------------------------------------------------------
+
